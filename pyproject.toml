@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "fastmail-hw13"
+version = "0.1.0"
+description = ""
+authors = ["Denko <officedenko@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi-mail = "^1.4.1"
+fastapi-limiter = "^0.1.5"
+uvicorn = "^0.24.0.post1"
+fastapi = "^0.104.1"
+alembic = "^1.12.1"
+sqlalchemy = "^2.0.23"
+psycopg2 = "^2.9.9"
+psycopg2-binary = "^2.9.9"
+pydantic = "^2.5.1"
+libgravatar = "^1.0.4"
+passlib = "^1.7.4"
+jwt = "^1.3.1"
+python-jose = {extras = ["criptography"], version = "^3.3.0"}
+python-multipart = "^0.0.6"
+bcrypt = "^4.0.1"
+redis = "^4.2.0"
+python-dotenv = "^1.0.0"
+pydantic-settings = "^2.1.0"
+fastapi-jwt-auth = "^0.5.0"
+sendgrid = "^6.10.0"
+cloudinary = "^1.36.0"
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
