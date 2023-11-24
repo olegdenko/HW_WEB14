@@ -13,8 +13,8 @@ Welcome to Contacts book's documentation!
 
 
 REST API main
-===================
-.. automodule:: .main
+=============================
+.. automodule:: main
   :members:
   :undoc-members:
   :show-inheritance:
