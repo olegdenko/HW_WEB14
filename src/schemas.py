@@ -19,6 +19,18 @@ class DateModel(BaseModel):
     date: date
 
     def json_schema(self):
+        """
+        The json_schema function is used to generate a JSON schema for the validator.
+        The default implementation of this function will return a schema that describes
+        the validator as an object with one property, &quot;validate&quot;, which is itself an object
+        with two properties: &quot;type&quot; and &quot;description&quot;. The type will be set to either 
+        &quot;PlainValidatorFunctionSchema&quot; or &quot;AsyncValidatorFunctionSchema&quot;, depending on whether the 
+        validate method returns a value synchronously or asynchronously. The description will be set to the docstring of the validate method. If you want your validators' schemas to
+        
+        :param self: Represent the instance of the class
+        :return: The schema for the validator
+        :doc-author: Trelent
+        """
         schema = super().json_schema()
         if "PlainValidatorFunctionSchema" in schema.get("type", ""):
             schema = None

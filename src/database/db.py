@@ -27,6 +27,13 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def get_db():
+    """
+    The get_db function opens a new database connection if there is none yet for the current application context.
+    It will also create the database tables if they don’t exist yet.
+    
+    :return: A database session
+    :doc-author: Trelent
+    """
     db = SessionLocal()
     try:
         yield db

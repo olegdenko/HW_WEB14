@@ -28,8 +28,12 @@ pydantic-settings = "^2.1.0"
 fastapi-jwt-auth = "^0.5.0"
 sendgrid = "^6.10.0"
 cloudinary = "^1.36.0"
+trelent = "^1.0"
 
 
+
+[tool.poetry.group.dev.dependencies]
+sphinx = "^7.2.6"
 
 [build-system]
 requires = ["poetry-core"]

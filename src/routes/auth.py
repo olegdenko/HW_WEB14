@@ -37,6 +37,17 @@ async def signup(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    """
+    The signup function creates a new user in the database.
+    
+    :param body: UserModel: Get the data from the request body
+    :param background_tasks: BackgroundTasks: Add a task to the background tasks queue
+    :param request: Request: Get the base_url of the request
+    :param db: Session: Get the database session
+    :param : Pass the user's email to the function
+    :return: A userresponse object
+    :doc-author: Trelent
+    """
     exist_user = await repository_users.get_user_by_email(body.email, db)
     if exist_user:
         raise HTTPException(
@@ -62,6 +73,14 @@ async def signup(
 async def login(
     body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
+    """
+    The login function is used to authenticate a user.
+    
+    :param body: OAuth2PasswordRequestForm: Get the data from the request body
+    :param db: Session: Pass the database session to the function
+    :return: A dict, which is a json object
+    :doc-author: Trelent
+    """
     user = await repository_users.get_user_by_email(body.username, db)
     if user is None:
         raise HTTPException(
@@ -92,6 +111,17 @@ async def login(
 
 @router.get("/confirmed_email/{token}")
 async def confirmed_email(token: str, db: Session = Depends(get_db)):
+    """
+    The confirmed_email function confirms the user's email address.
+        Args:
+            token (str): The JWT token that was sent to the user's email address.
+            db (Session, optional): SQLAlchemy Session. Defaults to Depends(get_db).
+    
+    :param token: str: Get the token from the url
+    :param db: Session: Pass the database connection to the function
+    :return: The following error:
+    :doc-author: Trelent
+    """
     email = await auth_servise.get_email_from_token(token)
     user = await repository_users.get_user_by_email(email, db)
     if user is None:
@@ -109,6 +139,17 @@ async def refresh_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db),
 ):
+    """
+    The refresh_token function is used to refresh the access token.
+        The function takes in a refresh token and returns an access_token,
+        a new refresh_token, and the type of token (bearer).
+    
+    :param credentials: HTTPAuthorizationCredentials: Get the token from the request header
+    :param db: Session: Get the database session, and the credentials: httpauthorizationcredentials parameter is used to get the token from http headers
+    :param : Get the user's credentials from the request header
+    :return: A dictionary with access_token, refresh_token and token_type
+    :doc-author: Trelent
+    """
     token = credentials.credentials
     email = await auth_servise.decode_refresh_token(token)
     user = await repository_users.get_user_by_email(email, db)
@@ -135,6 +176,21 @@ async def request_email(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    """
+    The request_email function is used to send an email to the user with a link
+    to confirm their account. The function takes in the body of the request, which
+    is a RequestEmail object, and uses that information to find out if there is 
+    a user with that email address. If there isn't one, then it returns an error message. 
+    If there is one, then it sends them an email using FastAPI's background tasks feature.
+    
+    :param body: RequestEmail: Get the email from the request body
+    :param background_tasks: BackgroundTasks: Add a task to the background tasks queue
+    :param request: Request: Get the base_url of the server
+    :param db: Session: Get the database session
+    :param : Get the user's email, username and request
+    :return: A dict with a message
+    :doc-author: Trelent
+    """
     user = await repository_users.get_user_by_email(body.email, db)
 
     if user:
