@@ -2,30 +2,34 @@ from pydantic_settings import BaseSettings
 from pydantic import EmailStr
 
 
+POSTGRES_DB="rest_app"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD=567234
+POSTGRES_PORT=5432
+POSTGRES_HOST="hw_web14-postgres-1"
 class Settings(BaseSettings):
-    sqlalchemy_database_url: str
-    secret_key: str
-    algorithm: str
-    mail_username: str
-    mail_password: str
-    mail_from: str
-    mail_port: int
-    mail_server: str
-    redis: str
-    redis_host: str
-    redis_port: int
-    postgres_db: str
-    postgres_user: str
-    postgres_password: str
-    postgres_port: int
-    postgres_host: str
-    cloudinary_name: str
-    cloudinary_api_key: str
-    cloudinary_api_secret: str
+    sqlalchemy_database_url: str = "postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+    secret_key: str = "secret_key"
+    algorithm: str = "HS256"
+    mail_username: str = "olegdenko@meta.ua"
+    mail_password: str = "secretPassword357"
+    mail_from: str = "olegdenko@meta.ua"
+    mail_port: int = 465
+    mail_server: str = "smtp.meta.ua"
+    redis: str = "redis://hw_web14-redis-1"
+    redis_host: str = "hw_web14-redis-1"
+    redis_port: int = 6379
+    postgres_db: str = "rest_app"
+    postgres_user: str = "postgres"
+    postgres_password: str = "567234"
+    postgres_port: int = 5432
+    postgres_host: str = "hw_web14-postgres-1"
+    cloudinary_name: str = "dwtilicoq"
+    cloudinary_api_key: str = "971622492684357"
+    cloudinary_api_secret: str = "-TjMo-OfjFNmLWpZViQkIdZw4_s"
 
     class Config:
-        env_file = ".env"
+        env_file = "1.env"
         env_file_encoding = "utf-8"
-
 
 settings = Settings()

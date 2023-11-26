@@ -50,7 +50,8 @@ async def read_contacts(
           parameters:
             - in: query
               name: skip (optional)  # The name parameter is the variable that will be used to pass the value into the function. In this case, it's called &quot;skip&quot;. It's also possible to use an alias for this parameter by using &quot;name&quot; and then specifying an alternative name with &quot;as&quot;. For example, you could use `name=skip&amp;amp;as=offset
-    
+
+
     :param skip: int: Skip the first n contacts
     :param limit: int: Limit the number of contacts returned
     :param db: Session: Pass the database session to the function
@@ -74,13 +75,18 @@ async def read_contact(
     current_user: User = Depends(auth_servise.get_current_user),
 ):
     """
-    The read_contact function returns a contact by its ID.
-    
-    :param contact_id: int: Get the contact id from the url path
-    :param db: Session: Pass the database connection to the function
-    :param current_user: User: Get the current user from the database
-    :param : Get the contact id from the url
-    :return: A contact object
+    The read_contacts function returns a list of contacts.
+
+    :param skip: int: Number of contacts to skip (default is 0).
+    :param limit: int: Number of contacts to retrieve (default is 10).
+    :param db: Session: Pass the database connection to the function.
+    :param current_user: User: Get the current user from the database.
+
+    :return: A list of contacts.
+    :rtype: List[Contact]
+
+    :raises HTTPException 404: If the contacts are not found.
+
     :doc-author: Trelent
     """
     contact = await repository_contacts.get_contact(contact_id, db)
@@ -109,7 +115,7 @@ async def search_contact(
             name (str): The name of the contact to search for.
             last_name (str): The last_name of the contact to search for.
             e_mail (str): The e-mail address of the user to search for.
-    
+   
     :param name: str: Search for a contact by name
     :param last_name: str: Search for a contact by last name
     :param e_mail: str: Search for a contact by e-mail
@@ -118,6 +124,7 @@ async def search_contact(
     :param : Get the data from the database
     :return: A list of contacts
     :doc-author: Trelent
+
     """
     contact = await repository_contacts.search_contacts(name, last_name, e_mail, db)
     if contact is None:
@@ -139,12 +146,13 @@ async def read_upcoming_birthdays(
     """
     The read_upcoming_birthdays function returns a list of contacts with upcoming birthdays.
         The function is called by the read_upcoming_birthdays endpoint, which is defined in the app/main.py file.
-    
+   
     :param db: Session: Pass the database session to the function
     :param current_user: User: Get the currently logged in user
     :param : Pass the database session to the function
     :return: A list of contacts
     :doc-author: Trelent
+
     """
     contacts = await repository_contacts.get_upcoming_birthdays(db)
     if contacts is None:
@@ -167,13 +175,14 @@ async def create_contact(
     """
     The create_contact function creates a new contact in the database.
         The function takes a ContactModel object as input and returns the newly created contact.
-    
-    
+   
+   
     :param body: ContactModel: Get the data from the request body
     :param db: Session: Pass the database session to the function
     :param current_user: User: Get the user that is currently logged in
     :return: A contactmodel object
     :doc-author: Trelent
+
     """
     return await repository_contacts.create_contact(body, db)
 
@@ -194,7 +203,7 @@ async def update_contact(
     The update_contact function updates a contact in the database.
         The function takes an id and a body as input, and returns the updated contact.
         If no contact is found with that id, it raises an HTTP 404 error.
-    
+   
     :param body: ContactUpdate: Get the data from the request body
     :param contact_id: int: Identify the contact to be updated
     :param db: Session: Pass the database session to the repository
@@ -202,6 +211,7 @@ async def update_contact(
     :param : Get the contact id from the url
     :return: A contactupdate object
     :doc-author: Trelent
+
     """
     contact = await repository_contacts.update_contact(contact_id, body, db)
     if contact is None:
@@ -227,13 +237,14 @@ async def remove_contact(
             contact_id (int): The id of the contact to remove.
             db (Session, optional): SQLAlchemy Session. Defaults to Depends(get_db).
             current_user (User, optional): User object for authentication and authorization purposes. Defaults to Depends(auth_servise.get_current_user).
-    
+   
     :param contact_id: int: Pass the contact_id to the function
     :param db: Session: Get the database session
     :param current_user: User: Get the user information from the token
     :param : Get the id of the contact to be removed
     :return: The contact object that was deleted
     :doc-author: Trelent
+
     """
     contact = await repository_contacts.remove_contact(contact_id, db)
     if contact is None:

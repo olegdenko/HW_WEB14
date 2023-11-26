@@ -53,7 +53,7 @@ app.include_router(users.router, prefix='/api')
 
 templates = Jinja2Templates(directory="templates")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 favicon_path = pathlib.Path("src/favicon/favicon.ico")
 
@@ -88,6 +88,12 @@ async def startup():
 
 @app.get("/favicon.ico", response_class=FileResponse)
 def get_favicon():
+    """
+    The get_favicon function returns the path to the favicon.ico file.
+    
+    :return: The favicon_path variable
+    :doc-author: Trelent
+    """
     return favicon_path
 
 
@@ -98,6 +104,15 @@ def get_favicon():
     description="Main Page",
 )
 async def home(request: Request):
+    """
+    The home function is the default route for our application.
+    It returns a TemplateResponse object, which renders the home.html template
+    and passes it a context containing the title of our app and request object.
+    
+    :param request: Request: Pass the request object to the template
+    :return: A templateresponse object
+    :doc-author: Trelent
+    """
     return templates.TemplateResponse(
         "home.html", {"request": request, "title": "My App"}
     )
@@ -105,6 +120,15 @@ async def home(request: Request):
 
 @app.get("/login", response_class=HTMLResponse, description="Login")
 async def login(request: Request):
+    """
+    The login function handles the login page.
+        It returns a TemplateResponse object with the template name and context.
+    
+    
+    :param request: Request: Get the request object
+    :return: A templateresponse object
+    :doc-author: Trelent
+    """
     return templates.TemplateResponse(
         "login.html", {"request": request, "title": "My App"}
     )
@@ -117,6 +141,16 @@ async def login(request: Request):
     dependencies=[Depends(RateLimiter(times=1, seconds=300))],
 )
 async def register(request: Request):
+    """
+    The register function is responsible for handling the registration of new users.
+    It will render a template with a form that allows the user to enter their email address,
+    password, and password confirmation. The function will then validate these inputs and create 
+    a new user in our database if everything checks out.
+    
+    :param request: Request: Pass the request object to the template
+    :return: A templateresponse object
+    :doc-author: Trelent
+    """
     return templates.TemplateResponse(
         "register.html", {"request": request, "title": "My App"}
     )
@@ -124,6 +158,15 @@ async def register(request: Request):
 
 @app.get("/api/healthchaker")
 def healthchaker(db: Session = Depends(get_db)):
+    """
+    The healthchaker function is a simple function that returns a JSON object with the message &quot;Hello World&quot;.
+    This function is used to test if the API server is running.
+    
+    
+    :param db: Session: Access the database
+    :return: A dictionary with a message
+    :doc-author: Trelent
+    """
     return {"message": "Hello World"}
 
 
