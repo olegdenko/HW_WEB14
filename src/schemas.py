@@ -96,7 +96,7 @@ class NoteResponse(NoteBase):
 
 
 class ContactResponse(ContactBase):
-    id: int
+    id: Optional[int]
     name: str
     last_name: str
     e_mail: str

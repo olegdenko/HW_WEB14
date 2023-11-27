@@ -1,10 +1,15 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 import unittest
 from unittest.mock import MagicMock
 
 from sqlalchemy.orm import Session
 
-from src.database.models import Note, Tag, User, Contact
-from src.schemas import NoteModel, NoteUpdate, NoteStatusUpdate
+from src.database.models import Contact
+from src.schemas import ContactModel, ContactUpdate, ContactStatusUpdate
 from src.repository.contacts import (
     get_contacts,
     get_contact,
@@ -15,80 +20,102 @@ from src.repository.contacts import (
 )
 
 
-class TestNotes(unittest.IsolatedAsyncioTestCase):
+class TestContacts(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.session = MagicMock(spec=Session)
-        self.user = User(id=1)
 
     async def test_get_contacts(self):
-        notes = [Contact(), Contact(), Contact()]
-        self.session.query().filter().offset().limit().all.return_value = notes
-        result = await get_contacts(skip=0, limit=10, user=self.user, db=self.session)
-        self.assertEqual(result, notes)
+        contacts = [Contact(), Contact(), Contact()]
+        self.session.query().offset().limit().all.return_value = contacts
+        result = await get_contacts(skip=0, limit=10, db=self.session)
+        self.assertEqual(result, contacts)
 
     async def test_get_contact_found(self):
-        note = Note()
-        self.session.query().filter().first.return_value = note
-        result = await get_contact(note_id=1, user=self.user, db=self.session)
-        self.assertEqual(result, note)
+        contact = Contact()
+        self.session.query().filter().first.return_value = contact
+        result = await get_contact(contact_id=1, db=self.session)
+        self.assertEqual(result, contact)
 
     async def test_get_contact_not_found(self):
         self.session.query().filter().first.return_value = None
-        result = await get_contact(note_id=1, user=self.user, db=self.session)
+        result = await get_contact(contact_id=1, db=self.session)
         self.assertIsNone(result)
 
     async def test_create_contact(self):
-        body = NoteModel(title="test", description="test note", tags=[1, 2])
-        tags = [Tag(id=1, user_id=1), Tag(id=2, user_id=1)]
-        self.session.query().filter().all.return_value = tags
-        result = await create_contact(body=body, user=self.user, db=self.session)
-        self.assertEqual(result.title, body.title)
+        body = ContactModel(
+            name="test",
+            last_name="test",
+            e_mail="test@example.com",
+            phone_number="123456789",
+            born_date="2000-01-01",
+            description="test contact",
+        )
+        result = await create_contact(body=body, db=self.session)
+        self.assertEqual(result.name, body.name)
+        self.assertEqual(result.last_name, body.last_name)
+        self.assertEqual(result.e_mail, body.e_mail)
+        self.assertEqual(result.phone_number, body.phone_number)
+        self.assertEqual(result.born_date, body.born_date)
         self.assertEqual(result.description, body.description)
-        self.assertEqual(result.tags, tags)
         self.assertTrue(hasattr(result, "id"))
 
     async def test_remove_contact_found(self):
-        note = Note()
-        self.session.query().filter().first.return_value = note
-        result = await remove_contact(note_id=1, user=self.user, db=self.session)
-        self.assertEqual(result, note)
+        contact = Contact()
+        self.session.query().filter().first.return_value = contact
+        result = await remove_contact(contact_id=1, db=self.session)
+        self.assertEqual(result, contact)
 
     async def test_remove_contact_not_found(self):
         self.session.query().filter().first.return_value = None
-        result = await remove_contact(note_id=1, user=self.user, db=self.session)
+        result = await remove_contact(contact_id=1, db=self.session)
         self.assertIsNone(result)
 
     async def test_update_contact_found(self):
-        body = NoteUpdate(title="test", description="test note", tags=[1, 2], done=True)
-        tags = [Tag(id=1, user_id=1), Tag(id=2, user_id=1)]
-        note = Note(tags=tags)
-        self.session.query().filter().first.return_value = note
-        self.session.query().filter().all.return_value = tags
+        body = ContactUpdate(
+            name="test",
+            last_name="test",
+            e_mail="test@example.com",
+            phone_number="123456789",
+            born_date="2000-01-01",
+            description="test contact",
+            done=True  # Додайте done=True, якщо це поле потрібне для вас
+        )
+        contact = Contact()
+        self.session.query().filter().first.return_value = contact
         self.session.commit.return_value = None
-        result = await update_contact(note_id=1, body=body, user=self.user, db=self.session)
-        self.assertEqual(result, note)
+        result = await update_contact(contact_id=1, body=body, db=self.session)
+        self.assertEqual(result, contact)
 
     async def test_update_contact_not_found(self):
-        body = NoteUpdate(title="test", description="test note", tags=[1, 2], done=True)
+        body = ContactUpdate(
+            name="test",
+            last_name="test",
+            e_mail="test@example.com",
+            phone_number="123456789",
+            born_date="2000-01-01",
+            description="test contact",
+            done=True  # Додайте done=True, якщо це поле потрібне для вас
+        )
         self.session.query().filter().first.return_value = None
         self.session.commit.return_value = None
-        result = await update_contact(note_id=1, body=body, user=self.user, db=self.session)
+        result = await update_contact(contact_id=1, body=body, db=self.session)
         self.assertIsNone(result)
 
-    async def test_update_status_contact_found(self):
-        body = NoteStatusUpdate(done=True)
-        note = Note()
-        self.session.query().filter().first.return_value = note
-        self.session.commit.return_value = None
-        result = await update_status_contact(note_id=1, body=body, user=self.user, db=self.session)
-        self.assertEqual(result, note)
 
-    async def test_update_status_note_not_found(self):
-        body = NoteStatusUpdate(done=True)
+    async def test_update_status_contact_found(self):
+        body = ContactStatusUpdate(done=True)
+        contact = Contact()
+        self.session.query().filter().first.return_value = contact
+        self.session.commit.return_value = None
+        result = await update_status_contact(contact_id=1, body=body, db=self.session)
+        self.assertEqual(result, contact)
+
+    async def test_update_status_contact_not_found(self):
+        body = ContactStatusUpdate(done=True)
         self.session.query().filter().first.return_value = None
         self.session.commit.return_value = None
-        result = await update_status_contact(note_id=1, body=body, user=self.user, db=self.session)
+        result = await update_status_contact(contact_id=1, body=body, db=self.session)
         self.assertIsNone(result)
 
 
