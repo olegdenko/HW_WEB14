@@ -79,7 +79,7 @@ class TestContacts(unittest.IsolatedAsyncioTestCase):
             phone_number="123456789",
             born_date="2000-01-01",
             description="test contact",
-            done=True  # Додайте done=True, якщо це поле потрібне для вас
+            done=True
         )
         contact = Contact()
         self.session.query().filter().first.return_value = contact
@@ -95,7 +95,7 @@ class TestContacts(unittest.IsolatedAsyncioTestCase):
             phone_number="123456789",
             born_date="2000-01-01",
             description="test contact",
-            done=True  # Додайте done=True, якщо це поле потрібне для вас
+            done=True
         )
         self.session.query().filter().first.return_value = None
         self.session.commit.return_value = None

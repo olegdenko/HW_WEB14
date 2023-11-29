@@ -44,7 +44,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(auth.router, prefix="/api")
 # app.include_router(tags.router, prefix="/api")
 # app.include_router(notes.router, prefix="/api")
@@ -53,7 +53,7 @@ app.include_router(users.router, prefix='/api')
 
 templates = Jinja2Templates(directory="templates")
 
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+# 
 
 favicon_path = pathlib.Path("src/favicon/favicon.ico")
 
