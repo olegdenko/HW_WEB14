@@ -18,17 +18,16 @@ def test_app():
 @pytest.mark.asyncio
 async def test_home_route(test_app):
     async with AsyncClient(app=test_app, base_url="http://test") as ac:
-        response = await ac.get("/")
+        response = await ac.get("/", headers={"X-Forwarded-For": "127.0.0.1"})
     assert response.status_code == 200
     assert "My App" in response.text
 
 @pytest.mark.asyncio
 async def test_login_route(test_app):
     async with AsyncClient(app=test_app, base_url="http://test") as ac:
-        response = await ac.get("/login")
+        response = await ac.get("/login", headers={"X-Forwarded-For": "127.0.0.1"})
     assert response.status_code == 200
     assert "My App" in response.text
 
-# Та інші тести для інших рутів або функцій вашого main.py
 if __name__ == '__main__':
     unittest.main()
