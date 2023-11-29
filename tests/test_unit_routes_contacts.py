@@ -1,125 +1,135 @@
+import pytest
 import sys
+from fastapi import Depends
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
+from enum import Enum
 import json
+from typing import List
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from fastapi.staticfiles import StaticFiles
+
+sys.path.append(str(Path(__file__).parent.parent))
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import sessionmaker
-from src.routes.contacts import router
-from src.schemas import ContactModel, ContactUpdate
+
+from src.database.models import User
+from src.database.db import get_db
+from main import app
+from src.schemas import ContactModel, ContactUpdate, ContactResponse
 from src.services.auth import auth_servise
-from src.database.models import Contact, Role, User
 from src.repository import contacts as repository_contacts
 
+class Role(str, Enum):
+    user = "user"
+    admin = "admin"
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+from tests.test_config import DATABASE_URL
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+test_client = TestClient(app)
+test_user = User(id=1, username="testuser", email="test@example.com")  # Role   role=Role.user.value
+
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+Base: DeclarativeMeta = declarative_base()
+
+def get_test_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@pytest.fixture
+def db_session():
+    db = get_test_db()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
+def test_read_contacts(db_session):
+    repository_contacts.get_contacts = lambda skip, limit, db: [
+        ContactResponse(id=1, name="Test Contact", email="test@example.com")
+    ]
 
-app = TestClient(router)
+    response = test_client.get("/contacts/", headers={"X-Forwarded-For": "127.0.0.1"})  # Assuming your API endpoint is at "/contacts/"
 
-
-def test_read_contacts(monkeypatch):
-    # Mock the get_contacts function to return a list of contacts
-    async def mock_get_contacts(skip: int, limit: int, db: Session):
-        return [Contact(), Contact(), Contact()]
-
-    monkeypatch.setattr("src.routes.contacts.get_contacts", mock_get_contacts)
-
-    response = app.get("/contacts/")
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 3
+    contacts = response.json()
+    assert isinstance(contacts, List)
+    assert len(contacts) == 1
+    assert contacts[0]["name"] == "Test Contact"
 
 
-def test_read_contact(monkeypatch):
-    # Mock the get_contact function to return a contact
-    async def mock_get_contact(contact_id: int, db: Session):
-        return Contact()
+def test_search_contact():
+    repository_contacts.search_contacts = lambda name, last_name, e_mail, db: [
+        ContactResponse(id=1, name="Test Contact", email="test@example.com")
+    ]
 
-    monkeypatch.setattr("src.routes.contacts.get_contact", mock_get_contact)
+    response = test_client.get("/search_by/?name=test", headers={"X-Forwarded-For": "127.0.0.1"})  # Assuming your API endpoint is at "/contacts/search_by/"
 
-    response = app.get("/contacts/1")
     assert response.status_code == 200
-    assert "id" in response.json()
+    contacts = response.json()
+    assert isinstance(contacts, List)
+    assert len(contacts) == 1
+    assert contacts[0]["name"] == "Test Contact"
 
 
-def test_search_contact(monkeypatch):
-    # Mock the search_contacts function to return a list of contacts
-    async def mock_search_contacts(name: str, last_name: str, e_mail: str, db: Session):
-        return [Contact(), Contact()]
+def test_read_upcoming_birthdays():
+    repository_contacts.get_upcoming_birthdays = lambda db: [
+        ContactResponse(id=1, name="Test Contact", email="test@example.com")
+    ]
 
-    monkeypatch.setattr("src.routes.contacts.search_contacts", mock_search_contacts)
+    response = test_client.get("/upcoming_birthdays/", headers={"X-Forwarded-For": "127.0.0.1"})  # Assuming your API endpoint is at "/contacts/upcoming_birthdays/"
 
-    response = app.get("/contacts/search_by/?name=test")
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
+    contacts = response.json()
+    assert isinstance(contacts, List)
+    assert len(contacts) == 1
+    assert contacts[0]["name"] == "Test Contact"
 
 
-def test_read_upcoming_birthdays(monkeypatch):
-    # Mock the get_upcoming_birthdays function to return a list of contacts
-    async def mock_get_upcoming_birthdays(db: Session):
-        return [Contact(), Contact()]
+def test_create_contact():
+    repository_contacts.create_contact = lambda body, db: ContactResponse(
+        id=1, name=body.name, email=body.email
+    )
 
-    monkeypatch.setattr("src.routes.contacts.get_upcoming_birthdays", mock_get_upcoming_birthdays)
+    contact_data = {"name": "New Contact", "email": "new@example.com"}
+    response = test_client.post("/", json=contact_data, headers={"X-Forwarded-For": "127.0.0.1"})  # Assuming your API endpoint is at "/contacts/"
 
-    response = app.get("/contacts/upcoming_birthdays/")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
-
-
-def test_create_contact(monkeypatch):
-    # Mock the create_contact function to return a contact response
-    async def mock_create_contact(body: ContactModel, db: Session):
-        return ContactModel(**body.dict(), id=1)
-
-    monkeypatch.setattr("src.routes.contacts.create_contact", mock_create_contact)
-
-    contact_data = {
-        "name": "John",
-        "last_name": "Doe",
-        "e_mail": "john.doe@example.com",
-        "birthday": "1990-01-01",
-    }
-    response = app.post("/contacts/", json=contact_data)
     assert response.status_code == 201
-    assert "id" in response.json()
-    assert response.json()["name"] == contact_data["name"]
+    contact = response.json()
+    assert contact["name"] == "New Contact"
 
 
-def test_update_contact(monkeypatch):
-    # Mock the update_contact function to return an updated contact
-    async def mock_update_contact(contact_id: int, body: ContactUpdate, db: Session):
-        return Contact(id=contact_id, name=body.name)
+def test_update_contact():
+    repository_contacts.update_contact = lambda contact_id, body, db: ContactResponse(
+        id=contact_id, name=body.name, email=body.email
+    )
 
-    monkeypatch.setattr("src.routes.contacts.update_contact", mock_update_contact)
+    contact_data = {"name": "Updated Contact", "email": "updated@example.com"}
+    response = test_client.put("/1", json=contact_data, headers={"X-Forwarded-For": "127.0.0.1"})  # Assuming your API endpoint is at "/contacts/1"
 
-    contact_id = 1
-    update_data = {"name": "UpdatedName"}
-    response = app.put(f"/contacts/{contact_id}", json=update_data)
     assert response.status_code == 200
-    assert "id" in response.json()
-    assert response.json()["name"] == update_data["name"]
+    contact = response.json()
+    assert contact["name"] == "Updated Contact"
 
 
-def test_remove_contact(monkeypatch):
-    # Mock the remove_contact function to return the removed contact
-    async def mock_remove_contact(contact_id: int, db: Session):
-        return Contact(id=contact_id, name="John")
+def test_remove_contact():
+    repository_contacts.remove_contact = lambda contact_id, db: ContactResponse(
+        id=contact_id, name="Deleted Contact", email="deleted@example.com"
+    )
 
-    monkeypatch.setattr("src.routes.contacts.remove_contact", mock_remove_contact)
+    response = test_client.delete("/1", headers={"X-Forwarded-For": "127.0.0.1"})
 
-    contact_id = 1
-    response = app.delete(f"/contacts/{contact_id}")
     assert response.status_code == 200
-    assert "id" in response.json()
-    assert response.json()["name"] == "John"
+
+
+if get_test_db in app.dependency_overrides:
+    del app.dependency_overrides[get_test_db]

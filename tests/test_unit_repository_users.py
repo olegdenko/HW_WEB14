@@ -103,11 +103,9 @@ class TestUsers(unittest.TestCase):
         user_model = UserModel(**user_data)
         user = await create_user(user_model, self.db)
 
-        # Act
         await confirmed_email(email, self.db)
         result = await get_user_by_email(email, self.db)
 
-        # Assert
         self.assertIsNotNone(result)
         self.assertTrue(result.confirmed)
 
